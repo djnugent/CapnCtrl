@@ -1,6 +1,4 @@
 #https://gist.github.com/chriskiehl/2906125
-
-
 #Giant dictonary to hold key name and VK value
 VK_CODE = {'backspace':0x08,
            'tab':0x09,
@@ -148,49 +146,3 @@ VK_CODE = {'backspace':0x08,
            ']':0xDD,
            "'":0xDE,
            '`':0xC0}
-
-
-def get_key_down():
-    keys = []
-    for key,code in VK_CODE.items():
-        if wapi.GetAsyncKeyState(code):
-            keys.append(key)
-    return keys
-
-
-
-def key_down(*args):
-    '''
-    press and hold. Do NOT release.
-    accepts as many arguments as you want.
-    e.g. pressAndHold('left_arrow', 'a','b').
-    '''
-    for i in args:
-        win32api.keybd_event(VK_CODE[i], 0,0,0)
-        time.sleep(.05)
-
-def key_press(*args):
-    '''
-    press and hold passed in strings. Once held, release
-    accepts as many arguments as you want.
-    e.g. pressAndHold('left_arrow', 'a','b').
-
-    this is useful for issuing shortcut command or shift commands.
-    e.g. pressHoldRelease('ctrl', 'alt', 'del'), pressHoldRelease('shift','a')
-    '''
-    for i in args:
-        win32api.keybd_event(VK_CODE[i], 0,0,0)
-        time.sleep(.05)
-
-    for i in args:
-            win32api.keybd_event(VK_CODE[i],0 ,win32con.KEYEVENTF_KEYUP ,0)
-            time.sleep(.1)
-
-def key_up(*args):
-    '''
-    release depressed keys
-    accepts as many arguments as you want.
-    e.g. release('left_arrow', 'a','b').
-    '''
-    for i in args:
-        win32api.keybd_event(VK_CODE[i],0 ,win32con.KEYEVENTF_KEYUP ,0)
