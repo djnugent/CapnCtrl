@@ -95,7 +95,7 @@ print("Verify copy by pasting")
 - Python3
 - numpy
 - [pywin32](https://sourceforge.net/projects/pywin32/files/pywin32/Build%20221/)
-- vJoy
+- [vJoy](http://vjoystick.sourceforge.net/site/index.php/download-a-install/download)
 
 ### Installation
 1. clone repo
