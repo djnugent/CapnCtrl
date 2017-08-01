@@ -1,22 +1,12 @@
 import numpy as np
 import win32gui, win32ui, win32con, win32api, pywintypes
 import time
-from keyboard import VK_CODE
-
+from keyboard import VK_CODE, _key_press, _key_up, _key_down
+from joystick import vJoy
 ### TODO
-# - Add joystick cap and ctrl Support
+# - Add joystick cap Support
 # - Add mouse click and scroll cap Support
 # - Add callback events
-
-### Class outline
-# ctrl.joystick(idx, action={})
-# ctrl.keyboard(down=[],up=[])
-# crtl.mouse(pos)
-
-# cap.screen(name = None, region = None, padding = [0,0,0,0]) -> numpy
-# cap.joystick(idx) -> dict
-# cap.keyboard() -> array
-# cap.mouse() -> array
 
 # cap.async_screen(name = None, region = None, padding = [0,0,0,0], rate = 0)
 # cap.async_joystick(idx, rate = 0)
@@ -40,73 +30,72 @@ from keyboard import VK_CODE
 
 
 class ctrl:
-    # Dictionary of initialized joysticks
-    joysticks = {}
+    #joystick
+    js = None
 
     @classmethod
-    def create_joystick(cls, idx):
-        if idx < 0:
-            raise KeyError("Joystick id must be >= 0")
-        js = vJoy(idx)
-        js.open()
-        cls.joysticks[idx] = js
-
-    def close_joystick(cls,idx):
-        # Close all joysticks
-        if idx  == -1:
-            for _idx, js in cls.joysticks.items:
-                js.close()
-                del cls.joysticks[idx]
-        # Close a specific joystick
-        elif idx in cls.joysticks:
-            cls.joysticks[idx].close()
-            del cls.joysticks[idx]
-        else:
-            raise KeyError("Joystick does not exist")
-
+    def create_joystick(cls):
+        cls.js = vJoy()
+        cls.js.open()
 
     @classmethod
-    def joystick(cls,idx,actions={}):
+    def close_joystick(cls):
+        cls.js.close()
+
+    @classmethod
+    def joystick_sticks(cls,**kwargs):
         # Check for a virtual joystick
-        if not idx in cls.joysticks:
-            raise KeyError("Joystick {} has not been created. Please call create_joystick({})".format(idx,idx))
+        if cls.js is None:
+            raise KeyError("Joystick has not been created. Please call create_joystick()")
 
-        js = cls.joysticks[idx]
-        # TODO do stuff
+        cls.js.sticks(**kwargs)
 
+    @classmethod
+    def joystick_btn_press(cls,**kwargs):
+        # Check for a virtual joystick
+        if cls.js is None:
+            raise KeyError("Joystick has not been created. Please call create_joystick()")
+
+        cls.js.button_press(**kwargs)
+
+    @classmethod
+    def joystick_btn_down(cls,**kargs):
+        # Check for a virtual joystick
+        if cls.js is None:
+            raise KeyError("Joystick has not been created. Please call create_joystick()")
+
+        cls.js.button_down(**kwargs)
+
+    @classmethod
+    def joystick_btn_up(cls,**kwargs):
+        # Check for a virtual joystick
+        if cls.js is None:
+            raise KeyError("Joystick has not been created. Please call create_joystick()")
+
+        cls.js.button_up(**kwargs)
 
     @classmethod
     def key_press(cls,*args,hold_time=0.0):
-        #https://gist.github.com/chriskiehl/2906125
-        # Key down
-        for i in args:
-            win32api.keybd_event(VK_CODE[i], 0,0,0)
-        # wait
-        time.sleep(hold_time)
-        # Key up
-        for i in args:
-            win32api.keybd_event(VK_CODE[i],0 ,win32con.KEYEVENTF_KEYUP ,0)
+        _key_press(*args,hold_time=hold_time)
 
     @classmethod
     def key_down(cls,*args):
-        #https://gist.github.com/chriskiehl/2906125
-        for i in args:
-            win32api.keybd_event(VK_CODE[i], 0,0,0)
+        _key_down(*args)
 
     @classmethod
     def key_up(cls,*args):
-        #https://gist.github.com/chriskiehl/2906125
-        for i in args:
-            win32api.keybd_event(VK_CODE[i],0 ,win32con.KEYEVENTF_KEYUP ,0)
+        _key_up(*args)
 
     @classmethod
     def mouse(cls,pos,relative=False):
         if relative:
             current_pos = win32api.GetCursorPos()
             x,y = pos[0] + current_pos[0], pos[1] + current_pos[1]
-            win32api.SetCursorPos((x,y))
         else:
-            win32api.SetCursorPos(pos)
+            x,y = pos
+
+        win32api.SetCursorPos((x,y))
+        #ctypes.windll.user32.SetCursorPos(x, y)
 
     @classmethod
     def click(cls,pos=None,typ="left",hold_time=0,relative=False):
@@ -120,6 +109,7 @@ class ctrl:
                 current_pos = win32api.GetCursorPos()
                 x,y = pos[0] + current_pos[0], pos[1] + current_pos[1]
             win32api.SetCursorPos((x,y))
+            #ctypes.windll.user32.SetCursorPos(x, y)
 
         # Type of click
         if typ.lower() == "left":
@@ -150,6 +140,7 @@ class ctrl:
                 current_pos = win32api.GetCursorPos()
                 x,y = pos[0] + current_pos[0], pos[1] + current_pos[1]
             win32api.SetCursorPos((x,y))
+            #ctypes.windll.user32.SetCursorPos(x, y)
 
         # Type of click
         if typ.lower() == "left":
@@ -173,6 +164,7 @@ class ctrl:
                 current_pos = win32api.GetCursorPos()
                 x,y = pos[0] + current_pos[0], pos[1] + current_pos[1]
             win32api.SetCursorPos((x,y))
+            #ctypes.windll.user32.SetCursorPos(x, y)
 
         # Type of click
         if typ.lower() == "left":
@@ -203,8 +195,8 @@ class cap:
             try:
                 winhdl = win32gui.FindWindow(None,window)
                 region = win32gui.GetWindowRect(winhdl)
-                win32gui.SetForegroundWindow(winhdl)
-                time.sleep(0.004)
+                #win32gui.SetForegroundWindow(winhdl)
+                #time.sleep(0.004)
             except pywintypes.error:
                 raise ValueError("Window does not exist. Run tools.active_windows() to see available windows") from None
 
