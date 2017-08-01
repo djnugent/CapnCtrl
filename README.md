@@ -1,4 +1,4 @@
-# CapnControl
+# CapnCtrl
 Capture and control  mouse, keyboard, joysticks from python. For Windows only.
 
 ## Features
@@ -94,7 +94,7 @@ print("Verify copy by pasting")
 ### Requirements
 - Python3
 - numpy
-- [pywin32]: https://sourceforge.net/projects/pywin32/files/pywin32/Build%20221/
+- [pywin32](https://sourceforge.net/projects/pywin32/files/pywin32/Build%20221/)
 - vJoy
 
 ### Installation
